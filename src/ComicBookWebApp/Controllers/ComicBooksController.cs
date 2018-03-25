@@ -20,6 +20,11 @@ namespace ComicBookLibraryManagerWebApp.Controllers
 
         private Context _context = null;
 
+        public ComicBooksController()
+        {
+            _context = new Context();
+        }
+
         public ActionResult Index()
         {
 
