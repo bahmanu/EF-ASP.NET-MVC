@@ -1,6 +1,7 @@
 ﻿using ComicBookLibraryManagerWebApp.ViewModels;
 using ComicBookShared.Data;
 using ComicBookShared.Models;
+using ComicBookWebApp.Controllers;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -14,19 +15,13 @@ namespace ComicBookLibraryManagerWebApp.Controllers
     /// <summary>
     /// Controller for adding/deleting comic book artists.
     /// </summary>
-    public class ComicBookArtistsController : Controller
+    public class ComicBookArtistsController : BaseController
     {
-        private Context _context = null;
-
-        public ComicBookArtistsController()
-        {
-            _context = new Context();
-        }
 
         public ActionResult Add(int comicBookId)
         {
 
-            var comicBook = _context.ComicBooks
+            var comicBook = Context.ComicBooks
                 .Include(cb => cb.Series)
                 .Where(cb => cb.Id == comicBookId)
                 .SingleOrDefault();
@@ -42,7 +37,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             };
 
             
-            viewModel.Init(_context);
+            viewModel.Init(Context);
 
             return View(viewModel);
         }
@@ -60,20 +55,20 @@ namespace ComicBookLibraryManagerWebApp.Controllers
                     ArtistId = viewModel.ArtistId,
                     RoleId = viewModel.RoleId
                 };
-                _context.ComicBookArtists.Add(comicBookArtist);
-                _context.SaveChanges();
+                Context.ComicBookArtists.Add(comicBookArtist);
+                Context.SaveChanges();
 
                 TempData["Message"] = "Your artist was successfully added!";
 
                 return RedirectToAction("Detail", "ComicBooks", new { id = viewModel.ComicBookId });
             }
             
-            viewModel.ComicBook = _context.ComicBooks
+            viewModel.ComicBook = Context.ComicBooks
                 .Include(cb => cb.Series)
                 .Where(cb => cb.Id == viewModel.ComicBookId)
                 .SingleOrDefault();
             
-            viewModel.Init(_context);
+            viewModel.Init(Context);
 
             return View(viewModel);
         }
@@ -85,7 +80,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
 
-            var comicBookArtist = _context.ComicBookArtists
+            var comicBookArtist = Context.ComicBookArtists
                 .Include(cba => cba.Artist)
                 .Include(cba => cba.Role)
                 .Include(cba => cba.ComicBook.Series)
@@ -108,8 +103,8 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             {
                 Id = id
             };
-            _context.Entry(comicBookArtist).State = EntityState.Deleted;
-            _context.SaveChanges();
+            Context.Entry(comicBookArtist).State = EntityState.Deleted;
+            Context.SaveChanges();
 
             TempData["Message"] = "Your artist was successfully deleted!";
 
@@ -131,7 +126,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
                 // doesn't already exist for this comic book.
                 // TODO Call method to check if this artist and role combination
                 // already exists for this comic book.
-                if (_context.ComicBookArtists
+                if (Context.ComicBookArtists
                         .Any(cba => cba.ComicBookId == viewModel.ComicBookId && 
                                     cba.RoleId == viewModel.RoleId &&
                                     cba.ArtistId == viewModel.ArtistId))
@@ -140,22 +135,6 @@ namespace ComicBookLibraryManagerWebApp.Controllers
                        "This artist and role combination already exists for this comic book.");
                 }
             }
-        }
-
-        private bool _disposed = false;
-
-        protected override void Dispose(bool disposing)
-        {
-            if (_disposed)
-                return;
-
-            if (disposing)
-            {
-                _context.Dispose();
-            }
-            _disposed = true;
-
-            base.Dispose(disposing);
         }
     }
 }
