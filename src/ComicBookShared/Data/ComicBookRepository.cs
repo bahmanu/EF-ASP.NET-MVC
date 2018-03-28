@@ -8,27 +8,24 @@ using System.Threading.Tasks;
 
 namespace ComicBookShared.Data
 {
-    public class ComicBookRepository
+    public class ComicBookRepository : BaseRepository<ComicBook>
     {
-        private Context _context = null;
-
-        public ComicBookRepository(Context context)
+        public ComicBookRepository(Context context) : base(context)
         {
-            _context = context;
         }
 
-        public IList<ComicBook> GetList()
+        public override IList<ComicBook> GetList()
         {
-            return _context.ComicBooks
+            return Context.ComicBooks
                     .Include(cb => cb.Series)
                     .OrderBy(cb => cb.Series.Title)
                     .ThenBy(cb => cb.IssueNumber)
                     .ToList();
         }
 
-        public ComicBook Get(int id, bool includeRelated = true)
+        public override ComicBook Get(int id, bool includeRelated = true)
         {
-            var comicBook = _context.ComicBooks.AsQueryable();
+            var comicBook = Context.ComicBooks.AsQueryable();
 
             if (includeRelated)
             {
@@ -42,7 +39,7 @@ namespace ComicBookShared.Data
                 .Where(cb => cb.Id == id)
                 .SingleOrDefault();
         }
-
+        /*
         public void Add(ComicBook comicBook)
         {
             _context.ComicBooks.Add(comicBook);
@@ -60,11 +57,11 @@ namespace ComicBookShared.Data
             var comicBook = new ComicBook() { Id = id };
             _context.Entry(comicBook).State = EntityState.Deleted;
             _context.SaveChanges();
-        }
+        }*/
 
         public bool ComicBookseriesHasIssueNumber(int comicBookId, int seriesId, int IssueNumber)
         {
-            return _context.ComicBooks
+            return Context.ComicBooks
                 .Any(cb => cb.Id != comicBookId &&
                            cb.SeriesId == seriesId &&
                            cb.IssueNumber == IssueNumber);
@@ -72,7 +69,7 @@ namespace ComicBookShared.Data
 
         public bool ComicBookHasArtistRoleCombiniation(int comicBookId, int artistId, int roleId)
         {
-            return _context.ComicBookArtists
+            return Context.ComicBookArtists
                         .Any(cba => cba.ComicBookId == comicBookId &&
                                     cba.RoleId == roleId &&
                                     cba.ArtistId == artistId);

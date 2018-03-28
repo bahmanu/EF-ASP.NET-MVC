@@ -8,7 +8,7 @@ using System.Data.Entity;
 namespace ComicBookShared.Data
 {
     public abstract class BaseRepository<TEntity>
-        where TEntity : class, IEntity, new()
+        where TEntity : class
     {
         protected Context Context { get; private set; }
 
@@ -31,11 +31,17 @@ namespace ComicBookShared.Data
         }
         public void Delete(int id)
         {
+            /*
             var entity = new TEntity()
             {
                 Id = id
             };
-            Context.Entry(entity).State = EntityState.Deleted;
+            Context.Entry(entity).State = EntityState.Deleted;*/
+
+            var set = Context.Set<TEntity>();
+            var entity = set.Find(id);
+            set.Remove(entity);
+
             Context.SaveChanges();
         }
     }
