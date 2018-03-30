@@ -10,6 +10,7 @@ using System.Net;
 using System.Data.Entity.Infrastructure;
 using ComicBookShared.Data;
 using ComicBookWebApp.Controllers;
+using ComicBookWebApp.ViewModels;
 
 namespace ComicBookLibraryManagerWebApp.Controllers
 {
@@ -117,12 +118,40 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             {
                 var comicBook = viewModel.ComicBook;
 
-                _comicBooksRepository.Update(comicBook);
+                try
+                {
+                    _comicBooksRepository.Update(comicBook);
+
+                    TempData["Message"] = "Your comic book was successfully updated!";
+
+                    return RedirectToAction("Detail", new { id = comicBook.Id });
+
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    string message = null;
+                    var entityPropertyValues = ex.Entries.Single().GetDatabaseValues();
+
+
+                    if (entityPropertyValues == null)
+                    {
+                        message = "The comicbook being updated has been deleted by another user. click the 'Cancel' to return to home.";
+
+                        viewModel.ComicBookHasBeenDeleted = true;
+                    }
+                    else
+                    {
+                        message = "The comicbook being updated has already been updated by another user. If you still want to make your change click the 'Save' button again. Otherwise click the 'Cancel' button to discard your changes.";
+
+                        comicBook.RowVersion = ((ComicBook)entityPropertyValues.ToObject()).RowVersion;
+                    }
+
+
+                    ModelState.AddModelError(string.Empty, message);
+                   
+                }
+
                 
-
-                TempData["Message"] = "Your comic book was successfully updated!";
-
-                return RedirectToAction("Detail", new { id = comicBook.Id });
             }
 
             viewModel.Init(Repository);
@@ -145,19 +174,48 @@ namespace ComicBookLibraryManagerWebApp.Controllers
                 return HttpNotFound();
             }
 
-            return View(comicBook);
+            var viewModel = new ComicBookDeleteViewModel()
+            {
+                ComicBook = comicBook
+            };
+            return View(viewModel);
         }
 
         [HttpPost]
-        public ActionResult Delete(int id)
+        public ActionResult Delete(ComicBookDeleteViewModel viewModel)
         {
 
-            _comicBooksRepository.Delete(id);
+            try
+            {
+                _comicBooksRepository.Delete(viewModel.ComicBook.Id, viewModel.ComicBook.RowVersion);
 
 
-            TempData["Message"] = "Your comic book was successfully deleted!";
+                TempData["Message"] = "Your comic book was successfully deleted!";
 
-            return RedirectToAction("Index");
+                return RedirectToAction("Index");
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                string message = null;
+                var entityPropertyValues = ex.Entries.Single().GetDatabaseValues();
+
+
+                if (entityPropertyValues == null)
+                {
+                    message = "The comicbook being deleted has been deleted by another user. click the 'Cancel' to return to home.";
+
+                    viewModel.ComicBookHasBeenDeleted = true;
+                }
+                else
+                {
+                    message = "The comicbook being deleted has already been updated by another user. If you still want to delete the comicbook than click the 'Delete' button again. Otherwise click the 'Cancel' button to return to home.";
+
+                    viewModel.ComicBook.RowVersion = ((ComicBook)entityPropertyValues.ToObject()).RowVersion;
+                }
+                ModelState.AddModelError(string.Empty, message);
+                return View(viewModel);
+            }
+
         }
 
         /// <summary>

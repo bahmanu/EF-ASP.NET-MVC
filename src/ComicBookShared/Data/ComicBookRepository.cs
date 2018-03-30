@@ -39,6 +39,18 @@ namespace ComicBookShared.Data
                 .Where(cb => cb.Id == id)
                 .SingleOrDefault();
         }
+
+        public void Delete(int id, byte[] rowVersion)
+        {
+            var comicBook = new ComicBook()
+            {
+                Id = id,
+                RowVersion = rowVersion
+            };
+
+            Context.Entry(comicBook).State = EntityState.Deleted;
+            Context.SaveChanges();
+        }
         /*
         public void Add(ComicBook comicBook)
         {
