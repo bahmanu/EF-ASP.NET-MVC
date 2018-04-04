@@ -19,17 +19,17 @@ namespace ComicBookShared.Data
 
         public abstract TEntity Get(int id, bool includeRelated = true);
         public abstract IList<TEntity> GetList();
-        public void Add(TEntity tEntity)
+        public virtual void Add(TEntity tEntity)
         {
             Context.Set<TEntity>().Add(tEntity);
             Context.SaveChanges();
         }
-        public void Update(TEntity tEntity)
+        public virtual void Update(TEntity tEntity)
         {
             Context.Entry(tEntity).State = EntityState.Modified;
             Context.SaveChanges();
         }
-        public void Delete(int id)
+        public virtual void Delete(int id)
         {
             /*
             var entity = new TEntity()
